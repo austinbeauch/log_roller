@@ -1,7 +1,7 @@
 from setuptools import setup
 
 
-setup(name='sip_tpv',
+setup(name='log_roller',
       version="0.1",
       description='Log file data processing library',
       url='https://github.com/stargaser/sip_tpv',
