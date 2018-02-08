@@ -81,3 +81,22 @@ class Roller(object):
 		# TODO: Determine how lines are displayed
 		# Perhaps add more parameters to specify if the lines should be written to their own log file or stdout
 		raise NotImplementedError
+
+	def get_time(self, time):
+		"""
+		Finds the entry at a specific time. Assumed the time format is identical to the times contained in the file.
+		:param time: Time to return/print out
+		:return:
+		"""
+		# TODO: convert times to something standard? Detect time format in file once it's initialized
+		# TODO: Find first occurrence, or add parameter to find all n occurrences
+		raise NotImplementedError
+
+	def find_entry(self, string):
+		"""
+		Find an entry with a specific string. Similar to parse_keyword, but more general and allows searching
+		for any string. Extracts the full line.
+		:param string: (str) searching string
+		"""
+		# TODO: Find first occurrence of the string, or find all n occurrences
+		raise NotImplementedError
