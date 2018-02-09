@@ -1,20 +1,30 @@
-"""
-Main data parser file. At least to start, files are never fully loaded into memory, as this library is intended
-for parsing large log files on systems with hardware limitations.
-"""
-
 import os
 import urllib.request
 from urllib.error import HTTPError
 
-LOG_DIRECTORY = 'logs/'
+__doc__ = """
+Main data parser file. At least to start, files are never fully loaded into memory, as this library is intended
+for parsing large log files on systems with hardware limitations.
+"""
 
 
 class Roller(object):
-	def __init__(self, filename, url='https://web.uvic.ca/~austinb/', path=LOG_DIRECTORY):
-		self._filename = filename
+	def __init__(self, file_path, url=None, auto_download=True):
+		"""
+		:param file_path: Log file path. Locally stored if url is None
+		:param url: URL of data file. If None, assume the file is stored locally until otherwise specified
+		:param auto_download: Automatically download the file when url is specified and the file currently doesn't exist
+		"""
+		self._file_path = file_path
+		self._filename = os.path.basename(file_path)
 		self._url = url
-		self._path = path
+
+		if url is not None and not os.path.exists(self._file_path) and auto_download:
+			self.download(url)
+
+	@property
+	def filepath(self):
+		return self._file_path
 
 	@property
 	def filename(self):
@@ -24,21 +34,20 @@ class Roller(object):
 	def url(self):
 		return self._url
 
-	@property
-	def path(self):
-		return self._path
+	def delete(self):
+		"""Delete the file associated with the Roller object"""
+		os.remove(self.filepath)
 
-	def download(self):
+	def download(self, url):
 		"""
 		Downloads filename from url and moves into the specified data directory.
 		File left in working directory if data directory is NONE.
+		:param url: (str) Online location of the file to be downloaded
 		"""
-
-		if not os.path.exists(LOG_DIRECTORY):
-			os.mkdir(LOG_DIRECTORY)
+		self._url = url
 		try:
 			urllib.request.urlretrieve(self.url + self.filename, self.filename)
-			os.rename(self.filename, self.path+self.filename)
+			os.rename(self.filename, self.filepath)
 		except (ValueError, HTTPError) as ex:
 			raise ex
 

@@ -1,27 +1,37 @@
 import unittest
-from urllib.error import HTTPError
+import os
 from log_roller import roller
+from urllib.error import HTTPError
 
 
 class RollerTest(unittest.TestCase):
+	def setUp(self):
+		self.file1 = 'log_1.log'
+		self.filebad = 'log_55.log'
+		self.server = 'https://web.uvic.ca/~austinb/'
+		self.roller1 = roller.Roller(self.file1)
 
-    def setUp(self):
-        self.file1 = 'log_1.log'
-        self.file2 = 'log_2.log'
-        self.filebad = 'log_55.log'
-        self.server = 'https://web.uvic.ca/~austinb/'
-        self.roller1 = roller.Roller(self.file1)
-        self.roller2 = roller.Roller(self.file2, url='not_a_server')
+	def test_init(self):
+		self.assertEqual(self.roller1.filename, 'log_1.log')
+		self.assertEqual(self.roller1.url, None)
 
-    def test_download(self):
-        self.assertEqual(self.roller1.filename, self.file1)
-        self.assertEqual(self.roller1.url, self.server)
+		roller.Roller(self.file1, self.server)
+		assert(os.path.exists(self.file1))
 
-        with self.assertRaises(ValueError):
-            self.roller2.download()
-        with self.assertRaises(HTTPError):
-            roller.Roller(self.filebad).download()
+		roll = roller.Roller('path/to/file.log', auto_download=False)
+		self.assertEqual(roll.filename, 'file.log')
+		self.roller1.delete()
 
+	def test_download(self):
+		with self.assertRaises(HTTPError):
+			roller.Roller(self.filebad, 'https://web.uvic.ca/~austinb/')
+
+		with self.assertRaises(ValueError):
+			roller.Roller(self.filebad, 'not/a/server')
+
+		self.roller1.download(self.server)
+		assert (os.path.exists(self.file1))
+		self.roller1.delete()
 
 if __name__ == '__main__':
-    unittest.main()
+	unittest.main()
