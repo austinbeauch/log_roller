@@ -46,8 +46,9 @@ class Roller(object):
 		"""
 		self._url = url
 		try:
-			urllib.request.urlretrieve(self.url + self.filename, self.filename)
-			os.rename(self.filename, self.filepath)
+			# TODO: test if downloading directly to the path works with urllib
+			urllib.request.urlretrieve(self.url + self.filename, self.filepath)
+			# os.rename(self.filename, self.filepath)
 		except (ValueError, HTTPError) as ex:
 			raise ex
 
