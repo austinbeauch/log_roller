@@ -1,6 +1,5 @@
 from setuptools import setup
 
-
 setup(name='log_roller',
       version="0.1",
       description='Log file data processing library',
