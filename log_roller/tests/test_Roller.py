@@ -2,6 +2,7 @@ import unittest
 import os
 from log_roller import roller
 from urllib.error import HTTPError
+from ..error import NoneError
 
 
 class RollerTest(unittest.TestCase):
@@ -23,16 +24,21 @@ class RollerTest(unittest.TestCase):
         self.roller1.delete()
 
     def test_download(self):
+        with self.assertRaises(NoneError):
+            roller.Roller(self.filebad).download()
         with self.assertRaises(HTTPError):
             roller.Roller(self.filebad, 'https://web.uvic.ca/~austinb/')
-
         with self.assertRaises(ValueError):
             roller.Roller(self.filebad, 'not/a/server')
 
         self.roller1.download(self.server)
-        assert (os.path.exists(self.file1))
+        assert(os.path.exists(self.file1))
         self.roller1.delete()
 
+    def test_delete(self):
+        self.roller1.download(self.server)
+        self.roller1.delete()
+        assert(not os.path.exists(self.file1))
 
 if __name__ == '__main__':
     unittest.main()

@@ -1,6 +1,7 @@
 import os
 import urllib.request
 from urllib.error import HTTPError
+from .error import NoneError
 
 __doc__ = """
 Main data parser file. At least to start, files are never fully loaded into memory, as this library is intended
@@ -11,9 +12,9 @@ for parsing large log files on systems with hardware limitations.
 class Roller(object):
     def __init__(self, file_path, url=None, auto_download=True):
         """
-        :param file_path: Log file path. Locally stored if url is None
-        :param url: URL of data file. If None, assume the file is stored locally until otherwise specified
-        :param auto_download: Automatically download the file when url is specified and the file currently doesn't exist
+        :param file_path: Relative file path.
+        :param url: Web address of data file. If None, assume the file is stored locally until otherwise specified.
+        :param auto_download: Automatically download the file when url is specified and the file doesn't exist locally.
         """
         self._file_path = file_path
         self._filename = os.path.basename(file_path)
@@ -38,13 +39,16 @@ class Roller(object):
         """Delete the file associated with the Roller object"""
         os.remove(self.filepath)
 
-    def download(self, url):
+    def download(self, url=None):
         """
-        Downloads filename from url and moves into the specified data directory.
-        File left in working directory if data directory is NONE.
+        Downloads Roller filename from url.
         :param url: (str) Online location of the file to be downloaded
         """
-        self._url = url
+        if url is None and self._url is None:
+            raise NoneError(self.filename)
+        if url is not None:
+            self._url = url
+
         try:
             urllib.request.urlretrieve(self.url + self.filename, self.filename)
             os.rename(self.filename, self.filepath)
