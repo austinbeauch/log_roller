@@ -23,6 +23,8 @@ class RollerTest(unittest.TestCase):
         self.assertEqual(roll.filename, 'file.log')
         self.roller1.delete()
 
+        self.assertEqual(roller.Roller("~/path/to/log.log").filepath, os.getenv('HOME')+"/path/to/log.log")
+
     def test_download(self):
         with self.assertRaises(NoneError):
             roller.Roller(self.filebad).download()

@@ -17,9 +17,12 @@ class Roller(object):
         :param url: Web address of data file. If None, assume the file is stored locally until otherwise specified.
         :param auto_download: Automatically download the file when url is specified and the file doesn't exist locally.
         """
-        # TODO: allow '~' to specify home directory
-        # Apparently os doesn't recognize ~ as a path
-        self._file_path = file_path
+
+        if file_path.split('/')[0] == '~':
+            self._file_path = file_path.replace('~', os.getenv("HOME"))
+        else:
+            self._file_path = file_path
+
         self._filename = os.path.basename(file_path)
         self._url = url
 
