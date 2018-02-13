@@ -8,7 +8,7 @@ obj = ['Mainframe', 'Server', 'CPU', 'Battery', 'Human']
 measurement = ['voltage', 'current', 'capacitance', 'love']
 
 dx = 1
-for i in range(10000):
+for i in range(10):
     time_dict['s'] = str("0" + str(int(time_dict['s']) + 1)) if int(time_dict['s']) < 9 \
         else str(int(time_dict['s']) + dx)
     if int(time_dict['s']) == 99:

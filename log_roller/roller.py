@@ -4,9 +4,6 @@ import urllib.request
 from urllib.error import HTTPError
 from .error import NoneError
 
-import numpy as np
-
-
 __doc__ = """
 Main data parser file. At least to start, files are never fully loaded into memory, as this library is intended
 for parsing large log files on systems with hardware limitations.
@@ -64,8 +61,6 @@ class Roller(object):
         :return data: dictionary containing all information
         """
         # TODO: Refine this to be a general parser
-        var = []
-
         data = {'Lines': 0}
         x_squared = {}
         log_data = open(self.filepath, 'r')
@@ -149,15 +144,25 @@ class Roller(object):
 
     def time_range(self, start, stop):
         """
-        Get log lines within a certain time interval.
-        Return (log? print? append?) log status' between a start-time and end-time
+        Get log lines within a certain time interval. Return log status' between a start-time and end-time. Used for
+        examining short time periods. In the context of this library, a low-memory system shouldn't be calling this
+        with extremely large time frames that would result in a large return list.
         :param start: (str) Obtain log lines from start time
-        :param stop: (str) Stop getting data.
-        :return:
+        :param stop: (str) Stop time, exclusive
+        :return lines: (list) List containing each line within the time frame
         """
-        # TODO: Determine how lines are displayed
-        # Perhaps add more parameters to specify if the lines should be written to their own log file or stdout
-        raise NotImplementedError
+        flag = False
+        lines = []
+        log_data = open(self.filepath, 'r')
+        for line in log_data:
+            if line.split('|')[0] == start:
+                flag = True
+            elif line.split('|')[0] == stop:
+                break
+            if flag:
+                lines.append(line.split('\n')[0])
+        log_data.close()
+        return lines
 
     def get_time(self, time):
         """

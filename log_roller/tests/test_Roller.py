@@ -24,7 +24,7 @@ class RollerTest(unittest.TestCase):
 
         self.assertEqual(roller.Roller("~/path/to/log.log").filepath, os.getenv('HOME')+"/path/to/log.log")
 
-    def test_download(self):
+    def test_adownload(self):
         with self.assertRaises(NoneError):
             roller.Roller(self.filebad).download()
         with self.assertRaises(HTTPError):
@@ -46,6 +46,10 @@ class RollerTest(unittest.TestCase):
         stat = self.roller1.parse()
         self.assertEqual(round(stat['CPU_current Variance'], 10), 7.9861807559)
         self.assertEqual(round(stat['CPU_current Mean'], 9), 4.902564777)
+
+    def test_timeframe(self):
+        self.assertEqual(len(self.roller1.time_range("4:20.04", "4:20.10")), 6)
+
 
 if __name__ == '__main__':
     unittest.main()
