@@ -4,6 +4,9 @@ import urllib.request
 from urllib.error import HTTPError
 from .error import NoneError
 
+import numpy as np
+
+
 __doc__ = """
 Main data parser file. At least to start, files are never fully loaded into memory, as this library is intended
 for parsing large log files on systems with hardware limitations.
@@ -41,7 +44,7 @@ class Roller(object):
     def url(self):
         return self._url
 
-    def parse(self):
+    def parse(self, pipe='|'):
         """
         General purpose parser method. Generates dictionaries of keywords; keeping running values of times, lines
         averages, variances, standard deviations and more in the future.
@@ -50,25 +53,52 @@ class Roller(object):
         into memory. This also means numeric values contained in the file are not fully stored either. Everything
         is kept as running calculations to reduce memory usage.
 
-        Early stages will split lines by the pipe character, "|", as assume that time is always the first entry, along
+        Early stages will split lines by the given pipe string, as assume that time is always the first entry, along
         with other assumptions based off the files generated in log_generator.py but future versions will be more
         flexible with whatever none-standard format is thrown at the parser.
 
-        :return d: dictionary containing all information
+        Variance and mean accuracy tested accurate to 10 decimal places against NumPy's variance method. NumPy values
+        are generated locally to avoid adding NumPy as a requirement.
+
+        :param pipe: info line splitting character, default |
+        :return data: dictionary containing all information
         """
         # TODO: Refine this to be a general parser
-        d = {}
-        line_number = 0
-        total = 0
+        var = []
+
+        data = {'Lines': 0}
+        x_squared = {}
         log_data = open(self.filepath, 'r')
         for line in log_data:
-            line_number += 1
+            data["Lines"] += 1
             # time, level, info = line.split('|')
-            m = re.search('(\d+\.\d*)', line.split("|")[-1])
-            value = float(m.group(1))
-            total += value
-        average = total / line_number
-        return d
+
+            # TODO: Add more customizability to regex searching
+            m = re.search('(.*): (\d+\.?\d*)', line.split(pipe)[-1])
+            if m is None:
+                continue  # No match
+
+            value = float(m.group(2))
+            total = m.group(1) + " Total"
+            counts = m.group(1) + " Counts"
+            mean = m.group(1) + " Mean"
+            variance = m.group(1) + " Variance"
+
+            if total not in data:
+                x_squared[m.group(1)] = 0
+                data[total] = 0
+                data[counts] = 0
+                data[mean] = 0
+                data[variance] = 0
+
+            data[total] += value
+            data[counts] += 1
+            data[mean] = (data[total] / data[counts])
+            x_squared[m.group(1)] += value**2
+            data[variance] = (x_squared[m.group(1)] / data[counts]) - data[mean]**2
+
+        log_data.close()
+        return data
 
     def delete(self):
         """Delete the file associated with the Roller object"""

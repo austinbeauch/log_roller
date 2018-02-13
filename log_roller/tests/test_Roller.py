@@ -21,7 +21,6 @@ class RollerTest(unittest.TestCase):
 
         roll = roller.Roller('path/to/file.log', auto_download=False)
         self.assertEqual(roll.filename, 'file.log')
-        self.roller1.delete()
 
         self.assertEqual(roller.Roller("~/path/to/log.log").filepath, os.getenv('HOME')+"/path/to/log.log")
 
@@ -35,12 +34,18 @@ class RollerTest(unittest.TestCase):
 
         self.roller1.download(self.server)
         assert(os.path.exists(self.file1))
-        self.roller1.delete()
 
-    def test_delete(self):
+    def test_zdelete(self):
+        # zdelete to run last (unit tests run alphabetically)
         self.roller1.download(self.server)
         self.roller1.delete()
         assert(not os.path.exists(self.file1))
+
+    def test_parser(self):
+        self.roller1.download('https://web.uvic.ca/~austinb/')
+        stat = self.roller1.parse()
+        self.assertEqual(round(stat['CPU_current Variance'], 10), 7.9861807559)
+        self.assertEqual(round(stat['CPU_current Mean'], 9), 4.902564777)
 
 if __name__ == '__main__':
     unittest.main()
