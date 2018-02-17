@@ -11,13 +11,13 @@ for parsing large log files on systems with hardware limitations.
 
 
 class Roller(object):
-    def __init__(self, file_path, url=None, auto_download=True):
+    def __init__(self, file_path, time_format="hh:mm:ss.s", url=None, auto_download=True):
         """
         :param file_path: Relative file path.
         :param url: Web address of data file. If None, assume the file is stored locally until otherwise specified.
         :param auto_download: Automatically download the file when url is specified and the file doesn't exist locally.
         """
-
+        # TODO: Add a time format parameter
         if file_path.split('/')[0] == '~':
             self._file_path = file_path.replace('~', os.getenv("HOME"))
         else:
@@ -25,6 +25,8 @@ class Roller(object):
 
         self._filename = os.path.basename(file_path)
         self._url = url
+        self._time_format = time_format
+        self._time_format_re = _time_form(time_format)
 
         if url is not None and not os.path.exists(self._file_path) and auto_download:
             self.download(url)
@@ -40,6 +42,10 @@ class Roller(object):
     @property
     def url(self):
         return self._url
+
+    @property
+    def time_format(self):
+        return self._time_format
 
     def parse(self, pipe='|'):
         """
@@ -118,12 +124,27 @@ class Roller(object):
         """
         Parses data file in search of specific keywords and extracts numeric value associated immediately after.
         :param key: Searched keyword. Casted to a string to allow regex searching.
-        :return:
+        :return data: (dict) Dictionary containing the sum of all the values, the max value, min value, average of the
+        set, standard deviation, and the number of occurrences.
         """
-        # TODO: Extract maximum? Contain all in a list?
-        # TODO: Add other methods for more specific cases
-        # key = str(key)
-        raise NotImplementedError
+        data = {"Total": 0, "Maximum": 0, "Minimum": 0, "Average": 0, "Standard Deviation": 0, "Counts": 0}
+        x_squared = 0
+        log_data = open(self.filepath, 'r')
+
+        for line in log_data:
+            m = re.search(key, line)
+            if m is None:
+                continue  # No match
+
+            # TODO: Extract value separate from the time
+            value = 0
+            data["Total"] += value
+            data["Counts"] += 1
+            data["Average"] = data["Total"] / data["Counts"]
+            x_squared += value**2
+            data["Variance"] = (x_squared / data["Counts"]) - data["Average"]**2
+
+        return data
 
     def average(self):
         """
@@ -151,6 +172,7 @@ class Roller(object):
         :param stop: (str) Stop time, exclusive
         :return lines: (list) List containing each line within the time frame
         """
+        # TODO: Find arbitrary time (don't assume it's the first split buy "|")
         flag = False
         lines = []
         log_data = open(self.filepath, 'r')
@@ -182,3 +204,16 @@ class Roller(object):
         """
         # TODO: Find first occurrence of the string, or find all n occurrences
         raise NotImplementedError
+
+
+def _time_form(time):
+    """
+    Return appropriate regex compile expression for the associated time format
+    :param time: (str) Time format to be followed
+    :return: t, re patter object
+    """
+    # TODO: Add more time formats
+    t = None
+    if time == "hh:mm:ss.s":
+        t = re.compile("\d{2}:\d{2}:\d{2}.\d")
+    return t
