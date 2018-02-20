@@ -212,7 +212,7 @@ def _time_form(time):
     :param time: (str) Time format to be followed
     :return: t, re patter object
     """
-    # TODO: Add more time formats
+    # TODO: Add more time formats, include date-time
     t = None
     if time == "hh:mm:ss.s":
         t = re.compile("\d{2}:\d{2}:\d{2}.\d")

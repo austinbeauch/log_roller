@@ -104,3 +104,4 @@ ENV/
 
 # my stuff
 log_roller/tester.py
+main.py
