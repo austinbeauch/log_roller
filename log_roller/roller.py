@@ -11,7 +11,7 @@ for parsing large log files on systems with hardware limitations.
 
 
 class Roller(object):
-    def __init__(self, file_path, time_format="hh:mm:ss.s", url=None, auto_download=True):
+    def __init__(self, file_path, time_format="hh:mm.ss", url=None, auto_download=True):
         """
         :param file_path: Relative file path.
         :param url: Web address of data file. If None, assume the file is stored locally until otherwise specified.
@@ -26,7 +26,7 @@ class Roller(object):
         self._filename = os.path.basename(file_path)
         self._url = url
         self._time_format = time_format
-        self._time_format_re = _time_form(time_format)
+        self._time_pattern = _time_form(time_format)
 
         if url is not None and not os.path.exists(self._file_path) and auto_download:
             self.download(url)
@@ -44,8 +44,8 @@ class Roller(object):
         return self._url
 
     @property
-    def time_format(self):
-        return self._time_format
+    def time_pattern(self):
+        return self._time_pattern
 
     def parse(self, pipe='|'):
         """
@@ -177,9 +177,12 @@ class Roller(object):
         lines = []
         log_data = open(self.filepath, 'r')
         for line in log_data:
-            if line.split('|')[0] == start:
+            m = re.search(self.time_pattern, line)
+            if m is None:
+                continue
+            if m.group() == start:
                 flag = True
-            elif line.split('|')[0] == stop:
+            elif m.group() == stop:
                 break
             if flag:
                 lines.append(line.split('\n')[0])
@@ -208,12 +211,19 @@ class Roller(object):
 
 def _time_form(time):
     """
-    Return appropriate regex compile expression for the associated time format
-    :param time: (str) Time format to be followed
-    :return: t, re patter object
+    Incrementally builds up a regex pattern for a given time. Converts digits to the general \d digit match,
+    and same for letters. Everything else is left as itself. Intended to match and arbitrary date/time formats.
+    Does not reduce anything to metacharacters. Might be an area to improve in the future.
+    :param time: (str) Time format to be generalized for regex searching
+    :return pattern: (str) pattern string
     """
-    # TODO: Add more time formats, include date-time
-    t = None
-    if time == "hh:mm:ss.s":
-        t = re.compile("\d{2}:\d{2}:\d{2}.\d")
-    return t
+    # TODO: Support metacharacters
+    pattern = ""
+    for i in time:
+        if i.isdigit() or i == 'h' or i == 'm' or i == 's':
+            pattern += '\d'
+        elif i.isalnum():
+            pattern += '[A-Za-z]'
+        else:
+            pattern += i
+    return pattern

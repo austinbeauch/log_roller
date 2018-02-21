@@ -1,14 +1,14 @@
 import random
 
-f = open('log_2.log', 'w+')
+f = open('log_1.log', 'w+')
 
-time_dict = {'h': '4', 'm': '20', 's': '00'}
+time_dict = {'h': '04', 'm': '20', 's': '00'}
 level = ['DEBUG', 'INFO', 'WARNING', 'ERROR']
 obj = ['Mainframe', 'Server', 'CPU', 'Battery', 'Human']
 measurement = ['voltage', 'current', 'capacitance', 'love']
 
 dx = 1
-for i in range(10):
+for i in range(100000):
     time_dict['s'] = str("0" + str(int(time_dict['s']) + 1)) if int(time_dict['s']) < 9 \
         else str(int(time_dict['s']) + dx)
     if int(time_dict['s']) == 99:
