@@ -36,13 +36,12 @@ class RollerTest(unittest.TestCase):
         assert(os.path.exists(self.file1))
 
     def test_b_parser(self):
-        # Test file to be run locally with numpy.
-        # Commented out to avoid adding numpy as a dependency.
+        """ Test file to be run locally with numpy. Commented out to avoid adding numpy as a dependency. """
         # The parser computes variances and means WAY better than I expected. We're talking
         # numpy mean: 5.029483161648177 ; parser mean: 5.029483161648176
         # numpy variance: 8.261168000112667 ; parser variance: 8.261168000112676
         pass
-        # test_parse
+        """ test_parse """
         # stat = self.roller1.parse()
         # self.assertEqual(round(stat['CPU_current Variance'], 6), 8.261166)
         # self.assertEqual(round(stat['CPU_current Mean'], 6), 5.029483)

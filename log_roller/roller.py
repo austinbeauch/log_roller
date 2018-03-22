@@ -11,7 +11,7 @@ for parsing large log files on systems with hardware limitations.
 
 
 class Roller(object):
-    def __init__(self, file_path, time_format="hh:mm.ss", url=None, auto_download=True):
+    def __init__(self, file_path, time_format="hh:mm.ss", pipe="|", url=None, auto_download=True):
         """
         :param file_path: Relative file path.
         :param url: Web address of data file. If None, assume the file is stored locally until otherwise specified.
@@ -27,6 +27,7 @@ class Roller(object):
         self._url = url
         self._time_format = time_format
         self._time_pattern = _time_form(time_format)
+        self._pipe = pipe
 
         if url is not None and not os.path.exists(self._file_path) and auto_download:
             self.download(url)
@@ -47,7 +48,11 @@ class Roller(object):
     def time_pattern(self):
         return self._time_pattern
 
-    def parse(self, pipe='|'):
+    @property
+    def pipe(self):
+        return self._pipe
+
+    def parse(self):
         """
         General purpose parser method. Generates dictionaries of keywords; keeping running values of times, lines
         averages, variances, standard deviations and more in the future.
@@ -56,14 +61,13 @@ class Roller(object):
         into memory. This also means numeric values contained in the file are not fully stored either. Everything
         is kept as running calculations to reduce memory usage.
 
-        Early stages will split lines by the given pipe string, as assume that time is always the first entry, along
+        Early stages will split lines by the object's pipe string, and assume that time is always the first entry, along
         with other assumptions based off the files generated in log_generator.py but future versions will be more
         flexible with whatever none-standard format is thrown at the parser.
 
         Variance and mean accuracy tested accurate to 10 decimal places against NumPy's variance method. NumPy values
         are generated locally to avoid adding NumPy as a requirement.
 
-        :param pipe: info line splitting character, default |
         :return data: dictionary containing all information
         """
         # TODO: Refine this to be a general parser
@@ -75,7 +79,7 @@ class Roller(object):
             # time, level, info = line.split('|')
 
             # TODO: Add more customizability to regex searching
-            m = re.search('(.*): (\d+\.?\d*)', line.split(pipe)[-1])
+            m = re.search('(.*): (\d+\.?\d*)', line.split(self.pipe)[-1])
             if m is None:
                 continue  # No match
 
@@ -172,8 +176,8 @@ class Roller(object):
         :param stop: (str) Stop time, exclusive
         :return lines: (list) List containing each line within the time frame
         """
-        # TODO: Find arbitrary time (don't assume it's the first split buy "|")
-        flag = False
+
+        start_flag = False
         lines = []
         log_data = open(self.filepath, 'r')
         for line in log_data:
@@ -181,23 +185,36 @@ class Roller(object):
             if m is None:
                 continue
             if m.group() == start:
-                flag = True
+                start_flag = True
             elif m.group() == stop:
                 break
-            if flag:
+            if start_flag:
                 lines.append(line.split('\n')[0])
         log_data.close()
         return lines
 
-    def get_time(self, time):
+    def from_time(self, time, repeat=False):
         """
         Finds the entry at a specific time. Assumed the time format is identical to the times contained in the file.
         :param time: Time to return/print out
-        :return:
+        :param repeat: Find and return repeated occurrences of a time. Requires running through all lines of the file.
+        :return: Line string if repeat is false, else a list containing strings of all matching entries.
         """
-        # TODO: convert times to something standard? Detect time format in file once it's initialized
-        # TODO: Find first occurrence, or add parameter to find all n occurrences
-        raise NotImplementedError
+        # TODO: Test the list appending/return format
+        lines = []
+        log_data = open(self.filepath, 'r')
+
+        for line in log_data:
+            m = re.search(self.time_pattern, line)
+            if m is None:
+                continue
+            if m.group() == time:
+                lines.append(line.split('\n')[0])
+                if not repeat:
+                    return line.split('\n')[0]
+
+        log_data.close()
+        return lines
 
     def find_entry(self, string):
         """
