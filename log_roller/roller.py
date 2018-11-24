@@ -2,7 +2,7 @@ import os
 import re
 import urllib.request
 from urllib.error import HTTPError
-from .error import NoneError
+from ..error import NoneError
 
 __doc__ = """
 Main data parser file. At least to start, files are never fully loaded into memory, as this library is intended
@@ -19,38 +19,18 @@ class Roller(object):
         """
         # TODO: Add a time format parameter
         if file_path.split('/')[0] == '~':
-            self._file_path = file_path.replace('~', os.getenv("HOME"))
+            self.file_path = file_path.replace('~', os.getenv("HOME"))
         else:
-            self._file_path = file_path
+            self.file_path = file_path
 
-        self._filename = os.path.basename(file_path)
-        self._url = url
+        self.filename = os.path.basename(file_path)
+        self.url = url
         self._time_format = time_format
-        self._time_pattern = _time_form(time_format)
-        self._pipe = pipe
+        self.time_pattern = _time_form(time_format)
+        self.pipe = pipe
 
-        if url is not None and not os.path.exists(self._file_path) and auto_download:
+        if url is not None and not os.path.exists(self.file_path) and auto_download:
             self.download(url)
-
-    @property
-    def filepath(self):
-        return self._file_path
-
-    @property
-    def filename(self):
-        return self._filename
-
-    @property
-    def url(self):
-        return self._url
-
-    @property
-    def time_pattern(self):
-        return self._time_pattern
-
-    @property
-    def pipe(self):
-        return self._pipe
 
     def parse(self):
         """
@@ -73,7 +53,7 @@ class Roller(object):
         # TODO: Refine this to be a general parser
         data = {'Lines': 0}
         x_squared = {}
-        log_data = open(self.filepath, 'r')
+        log_data = open(self.file_path, 'r')
         for line in log_data:
             data["Lines"] += 1
             # time, level, info = line.split('|')
@@ -107,20 +87,20 @@ class Roller(object):
 
     def delete(self):
         """Delete the file associated with the Roller object"""
-        os.remove(self.filepath)
+        os.remove(self.file_path)
 
     def download(self, url=None):
         """
         Downloads Roller filename from url.
         :param url: (str) Online location of the file to be downloaded
         """
-        if url is None and self._url is None:
+        if url is None and self.url is None:
             raise NoneError(self.filename)
         elif url is not None:
-            self._url = url
+            self.url = url
         try:
             urllib.request.urlretrieve(self.url + self.filename, self.filename)
-            os.rename(self.filename, self.filepath)
+            os.rename(self.filename, self.file_path)
         except (ValueError, HTTPError) as ex:
             raise ex
 
@@ -133,7 +113,7 @@ class Roller(object):
         """
         data = {"Total": 0, "Maximum": 0, "Minimum": 0, "Average": 0, "Standard Deviation": 0, "Counts": 0}
         x_squared = 0
-        log_data = open(self.filepath, 'r')
+        log_data = open(self.file_path, 'r')
 
         for line in log_data:
             m = re.search(key, line)
@@ -179,7 +159,7 @@ class Roller(object):
 
         start_flag = False
         lines = []
-        log_data = open(self.filepath, 'r')
+        log_data = open(self.file_path, 'r')
         for line in log_data:
             m = re.search(self.time_pattern, line)
             if m is None:
@@ -202,7 +182,7 @@ class Roller(object):
         """
         # TODO: Test the list appending/return format
         lines = []
-        log_data = open(self.filepath, 'r')
+        log_data = open(self.file_path, 'r')
 
         for line in log_data:
             m = re.search(self.time_pattern, line)
